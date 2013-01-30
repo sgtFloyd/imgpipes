@@ -1,4 +1,5 @@
-var express = require('express');
+var express = require('express'),
+    imagick = require('imagemagick');
 
 var app = express.createServer(express.logger());
 
