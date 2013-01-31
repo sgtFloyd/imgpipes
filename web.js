@@ -24,6 +24,7 @@ app.get('/', function(req, res) {
   if( url && _.isEmpty(actions) ) return res.redirect(url);
   res.send("URL: "+url+", Actions: "+actions);
 });
+app.get('/ping', function(req, res) { res.send("PONG"); });
 
 var port = process.env.PORT || 5000;
 app.listen(port, function() {
