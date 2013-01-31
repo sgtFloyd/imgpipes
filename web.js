@@ -1,5 +1,6 @@
 var express = require('express'),
     imagick = require('imagemagick'),
+    request = require('request'),
     _ = require('underscore');
 
 var app = express.createServer(express.logger()),
