@@ -36,7 +36,7 @@ function Image() {
   }
 }
 
-app.get('/', function(req, res) {
+app.get('/', function(req, res, next) {
   var url = req.query['url'],
       actions = ip.parseActions(req.query['do']);
 
@@ -46,18 +46,17 @@ app.get('/', function(req, res) {
       // return res.redirect(url);
 
     var image = new Image();
-    image.load(url, function(buf){
-      if( buf && buf.length ) {
+    image.load(url, function(data){
+      if( data && data.length ) {
         res.contentType(image.type);
-        res.send(buf);
-      } else {
-        res.send('invalid content type on url');
-      }
+        res.send(data);
+      } else next();
     });
-  } else res.send('', 404);
+  } else next();
 });
 
 app.get('/ping', function(req, res) { res.send("PONG"); });
+app.get('*', function(req, res){ res.send(404); });
 
 var port = process.env.PORT || 5000;
 app.listen(port, function() {
