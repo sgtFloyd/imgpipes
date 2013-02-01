@@ -5,7 +5,6 @@ var express = require('express'),
 var app = express.createServer(express.logger());
 
 var EFFECTS = {
-      average:  ['convert', ['-average']],
       blur:     ['convert', ['-blur', '0x3']],
       contrast: ['convert', ['-contrast']],
       flip:     ['convert', ['-flip']],
@@ -18,7 +17,6 @@ var EFFECTS = {
     };
 EFFECTS.mirror = EFFECTS.flop;
 EFFECTS.negative = EFFECTS.invert = EFFECTS.negate;
-EFFECTS.squash = EFFECTS.average;
 
 app.get('/', function(req, res, next) {
   var url = req.query['url'],
