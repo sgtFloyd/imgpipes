@@ -5,13 +5,20 @@ var express = require('express'),
 var app = express.createServer(express.logger());
 
 var EFFECTS = {
+      average:  ['convert', ['-average']],
       blur:     ['convert', ['-blur', '0x3']],
+      contrast: ['convert', ['-contrast']],
       flip:     ['convert', ['-flip']],
+      flop:     ['convert', ['-flop']],
       negate:   ['convert', ['-negate']],
+      paint:    ['convert', ['-paint', '3']],
+      sepia:    ['convert', ['-sepia-tone', '75%']],
       sharpen:  ['convert', ['-sharpen', '5']],
       swirl:    ['convert', ['-swirl', '90']]
     };
+EFFECTS.mirror = EFFECTS.flop;
 EFFECTS.negative = EFFECTS.invert = EFFECTS.negate;
+EFFECTS.squash = EFFECTS.average;
 
 app.get('/', function(req, res, next) {
   var url = req.query['url'],
@@ -25,7 +32,6 @@ app.get('/', function(req, res, next) {
       if( EFFECTS[action] ) {
         var cmd = EFFECTS[action][0],
             args = EFFECTS[action][1],
-            // surround args with - to pipe from stdin, to stdout
             args = ['-'].concat(args, '-'),
             convert = spawn(cmd, args);
 
