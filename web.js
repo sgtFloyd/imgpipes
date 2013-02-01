@@ -17,8 +17,8 @@ app.get('/', function(req, res, next) {
   var url = req.query['url'],
       actions = req.query['do'];
 
-  if( url && actions ) {
-    var actions = actions.split(','),
+  if( url ) {
+    var actions = actions ? actions.split(',') : [],
         input = request.get(url);
 
     while( action = actions.shift() ){
