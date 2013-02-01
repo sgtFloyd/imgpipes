@@ -5,11 +5,11 @@ var express = require('express'),
 var app = express.createServer(express.logger());
 
 var EFFECTS = {
-      blur:     ['-', '-blur', '0x3', '-'],
-      flip:     ['-', '-flip', '-'],
-      negate:   ['-', '-negate', '-'],
-      sharpen:  ['-', '-sharpen', '5', '-'],
-      swirl:    ['-', '-swirl', '90', '-']
+      blur:     ['convert', ['-blur', '0x3']],
+      flip:     ['convert', ['-flip']],
+      negate:   ['convert', ['-negate']],
+      sharpen:  ['convert', ['-sharpen', '5']],
+      swirl:    ['convert', ['-swirl', '90']]
     };
 EFFECTS.negative = EFFECTS.invert = EFFECTS.negate;
 
@@ -23,7 +23,12 @@ app.get('/', function(req, res, next) {
 
     while( action = actions.shift() ){
       if( EFFECTS[action] ) {
-        var convert = spawn('convert', EFFECTS[action]);
+        var cmd = EFFECTS[action][0],
+            args = EFFECTS[action][1],
+            // surround args with - to pipe from stdin, to stdout
+            args = ['-'].concat(args, '-'),
+            convert = spawn(cmd, args);
+
         input.pipe(convert.stdin);
         input = convert.stdout;
       }
