@@ -5,8 +5,11 @@ var express = require('express'),
 var app = express.createServer(express.logger());
 
 var EFFECTS = {
-      flip: ['-', '-flip', '-']
+      flip: ['-', '-flip', '-'],
+      negate: ['-', '-negate', '-']
     };
+
+EFFECTS.negative = EFFECTS.invert = EFFECTS.negate;
 
 app.get('/', function(req, res, next) {
   var url = req.query['url'],
