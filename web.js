@@ -16,35 +16,45 @@ var app = express.createServer(express.logger()),
       }
     };
 
+function Image() {
+  this.load = function(url, callback){
+    var that = this;
+    that.data = new Buffer(0, 'binary');
+
+    var input = request.get(url);
+    input.on('data', function(buf){
+      if( typeof that.type === 'undefined' )
+        that.type = input.response.headers['content-type'];
+
+      if( that.type.match(/image/) )
+        that.data = Buffer.concat([that.data, buf]);
+      else input.end();
+    });
+    input.on('end', function(){
+      callback(that.data);
+    });
+  }
+}
+
 app.get('/', function(req, res) {
   var url = req.query['url'],
       actions = ip.parseActions(req.query['do']);
 
-  if( url && _.isEmpty(actions) )
-    return request.get(url).pipe(res);
-    // return res.redirect(url);
+  if( url ) {
+    if( _.isEmpty(actions) )
+      return request.get(url).pipe(res);
+      // return res.redirect(url);
 
-  var input = request.get(url),
-      output = new Buffer(0, 'binary'),
-      type, isImage;
-
-  input.on('data', function(buf){
-    if( typeof type == "undefined" ) {
-      type = input.response.headers['content-type'];
-      isImage = !!type.match(/^image/);
-    }
-
-    if( isImage )
-      output = Buffer.concat([output, buf]);
-  });
-
-  input.on('end', function(){
-    if( isImage ) {
-      res.contentType(type);
-      res.send(output);
-    }
-  });
-
+    var image = new Image();
+    image.load(url, function(buf){
+      if( buf && buf.length ) {
+        res.contentType(image.type);
+        res.send(buf);
+      } else {
+        res.send('invalid content type on url');
+      }
+    });
+  } else res.send('', 404);
 });
 
 app.get('/ping', function(req, res) { res.send("PONG"); });
