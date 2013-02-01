@@ -3,9 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "express": "2.5.x",
-    "imagemagick": "0.1.x",
-    "request": "2.12.x",
-    "underscore": "1.4.x"
+    "request": "2.12.x"
   },
   "engines": {
     "node": "0.8.x",

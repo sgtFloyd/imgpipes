@@ -1,57 +1,29 @@
 var express = require('express'),
-    imagick = require('imagemagick'),
     request = require('request'),
-    _ = require('underscore');
+    spawn = require('child_process').spawn;
 
-var app = express.createServer(express.logger()),
-    ip = {
-      VALID_ACTIONS: ['flip'],
-      isValidAction: function(action){
-        return _.contains(ip.VALID_ACTIONS, action);
-      },
-      parseActions: function(actions){
-        if(actions) {
-          return _.filter(actions.split(','), ip.isValidAction);
-        } else return [];
-      }
+var app = express.createServer(express.logger());
+
+var EFFECTS = {
+      flip: ['-', '-flip', '-']
     };
-
-function Image() {
-  this.load = function(url, callback){
-    var that = this;
-    that.data = new Buffer(0, 'binary');
-
-    var input = request.get(url);
-    input.on('data', function(buf){
-      if( typeof that.type === 'undefined' )
-        that.type = input.response.headers['content-type'];
-
-      if( that.type.match(/image/) )
-        that.data = Buffer.concat([that.data, buf]);
-      else input.end();
-    });
-    input.on('end', function(){
-      callback(that.data);
-    });
-  }
-}
 
 app.get('/', function(req, res, next) {
   var url = req.query['url'],
-      actions = ip.parseActions(req.query['do']);
+      actions = req.query['do'];
 
-  if( url ) {
-    if( _.isEmpty(actions) )
-      return request.get(url).pipe(res);
-      // return res.redirect(url);
+  if( url && actions ) {
+    var actions = actions.split(','),
+        input = request.get(url);
 
-    var image = new Image();
-    image.load(url, function(data){
-      if( data && data.length ) {
-        res.contentType(image.type);
-        res.send(data);
-      } else next();
-    });
+    while( action = actions.shift() ){
+      if( EFFECTS[action] ) {
+        var convert = spawn('convert', EFFECTS[action]);
+        input.pipe(convert.stdin);
+        input = convert.stdout;
+      }
+    }
+    input.pipe(res);
   } else next();
 });
 
