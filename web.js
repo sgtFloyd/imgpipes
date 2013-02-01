@@ -5,10 +5,12 @@ var express = require('express'),
 var app = express.createServer(express.logger());
 
 var EFFECTS = {
-      flip: ['-', '-flip', '-'],
-      negate: ['-', '-negate', '-']
+      blur:     ['-', '-blur', '0x3', '-'],
+      flip:     ['-', '-flip', '-'],
+      negate:   ['-', '-negate', '-'],
+      sharpen:  ['-', '-sharpen', '5', '-'],
+      swirl:    ['-', '-swirl', '90', '-']
     };
-
 EFFECTS.negative = EFFECTS.invert = EFFECTS.negate;
 
 app.get('/', function(req, res, next) {
