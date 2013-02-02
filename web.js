@@ -24,31 +24,39 @@ COMMANDS.greyscale = COMMANDS.grayscale = COMMANDS.grey = COMMANDS.gray;
 COMMANDS.mirror = COMMANDS.flop;
 COMMANDS.negative = COMMANDS.invert = COMMANDS.negate;
 
-var construct = function(cmdList){
-  if( !cmdList ) return [];
-  return _.chain(cmdList.split(','))
+var construct = function(commandList){
+  if( !commandList ) return [];
+  return _.chain(commandList.split(','))
     .reduce( function(output, cmd){
+      // Skip any invalid commands.
       if( !(cmd in COMMANDS) ) return output;
-      var lastCmd = output[output.length-1],
+
+      var lastCmd = _.last(output),
           thisCmd = COMMANDS[cmd];
 
+      // If this command uses the same function as the previous,
+      // append its arguments to the previous command's arguments.
       if( lastCmd && lastCmd.fn == thisCmd.fn )
         lastCmd.rgs = lastCmd.rgs.concat(thisCmd.rgs);
+      // Otherwise add it to the output as a new command.
       else output = output.concat(_.clone(thisCmd));
       return output;
     }, [])
     .map( function(cmd){
+      // Add '-' as each command's first and last arguments,
+      // telling ImageMagick to pipe from stdin to stdout.
       cmd.rgs = _.flatten(['-', cmd.rgs, '-']);
+
       return cmd;
     }).value();
 };
 
-var convert = function(url, cmdList, callback){
+var convert = function(url, commandList, callback){
   if( !url ) return callback();
 
   var imagepipe = request.get(url);
-  _.each(construct(cmdList), function(cmd){
-    console.log(cmd.fn, cmd.rgs.join(' '));
+  _.each(construct(commandList), function(cmd){
+    console.log('Spawning:', cmd.fn, cmd.rgs.join(' '));
     var convert = spawn(cmd.fn, cmd.rgs);
     imagepipe.pipe(convert.stdin);
     imagepipe = convert.stdout;
@@ -59,9 +67,9 @@ var convert = function(url, cmdList, callback){
 var app = express.createServer(express.logger());
 app.get('/', function(req, res, next){
   var url = req.query['url'] || req.query['u'],
-      cmdList = req.query['do'];
+      commandList = req.query['do'];
 
-  convert(url, cmdList,
+  convert(url, commandList,
     function(output){
       if( output )
         output.pipe(res);
