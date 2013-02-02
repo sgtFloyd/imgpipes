@@ -24,23 +24,34 @@ COMMANDS.greyscale = COMMANDS.grayscale = COMMANDS.grey = COMMANDS.gray;
 COMMANDS.mirror = COMMANDS.flop;
 COMMANDS.negative = COMMANDS.invert = COMMANDS.negate;
 
-var buildCommands = function(doList){
-  if( !doList ) return [];
+var construct = function(cmdList){
+  if( !cmdList ) return [];
+  var wrap = function(cmds){ return ['-'].concat(cmds, ['-']) };
 
-  return _.chain(doList.split(','))
-          .map(function(action){
-            var cmd = COMMANDS[action];
-            return {fn:cmd.fn, rgs:['-'].concat(cmd.rgs, ['-'])};
-          }).compact().value();
+  var commands = [], currentFn, currentRgs = [];
+  _.each(cmdList.split(','), function(cmd){
+    if( cmd in COMMANDS ) {
+      cmd = COMMANDS[cmd];
+      if( !currentFn ) currentFn = cmd.fn;
+      if (currentFn === cmd.fn) {
+        currentRgs = currentRgs.concat(cmd.rgs);
+      } else {
+        commands = commands.concat({ fn:currentFn, rgs:wrap(currentRgs) })
+        currentFn = cmd.fn;
+        currentRgs = cmd.rgs;
+      }
+    }
+  });
+  commands = commands.concat({ fn:currentFn, rgs:wrap(currentRgs) })
+  return commands;
 };
 
-var convert = function(url, doList, callback){
+var convert = function(url, cmdList, callback){
   if( !url ) return callback();
 
-  var commands = buildCommands(doList),
-      imagepipe = request.get(url);
-
-  _.each(commands, function(cmd){
+  var imagepipe = request.get(url);
+  _.each(construct(cmdList), function(cmd){
+    console.log(cmd.fn, cmd.rgs.join(' '));
     var convert = spawn(cmd.fn, cmd.rgs);
     imagepipe.pipe(convert.stdin);
     imagepipe = convert.stdout;
@@ -51,9 +62,9 @@ var convert = function(url, doList, callback){
 var app = express.createServer(express.logger());
 app.get('/', function(req, res, next){
   var url = req.query['url'] || req.query['u'],
-      doList = req.query['do'];
+      cmdList = req.query['do'];
 
-  convert(url, doList,
+  convert(url, cmdList,
     function(output){
       if( output )
         output.pipe(res);
