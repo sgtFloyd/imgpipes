@@ -26,24 +26,21 @@ COMMANDS.negative = COMMANDS.invert = COMMANDS.negate;
 
 var construct = function(cmdList){
   if( !cmdList ) return [];
-  var wrap = function(cmds){ return ['-'].concat(cmds, ['-']) };
+  return _.chain(cmdList.split(','))
+    .reduce( function(output, cmd){
+      if( !(cmd in COMMANDS) ) return output;
+      var lastCmd = output[output.length-1],
+          thisCmd = COMMANDS[cmd];
 
-  var retVal = [];
-  _.each(cmdList.split(','), function(cmd){
-    if( cmd in COMMANDS ) {
-      cmd = COMMANDS[cmd];
-      var lastCmd = retVal[retVal.length-1];
-      if (lastCmd && lastCmd.fn == cmd.fn) {
-        lastCmd.rgs = lastCmd.rgs.concat(cmd.rgs);
-      } else {
-        retVal = retVal.concat( _.clone(cmd) );
-      }
-    }
-  });
-  return _.map(retVal, function(cmd){
-    cmd.rgs = wrap(cmd.rgs);
-    return cmd;
-  });
+      if( lastCmd && lastCmd.fn == thisCmd.fn )
+        lastCmd.rgs = lastCmd.rgs.concat(thisCmd.rgs);
+      else output = output.concat(_.clone(thisCmd));
+      return output;
+    }, [])
+    .map( function(cmd){
+      cmd.rgs = _.flatten(['-', cmd.rgs, '-']);
+      return cmd;
+    }).value();
 };
 
 var convert = function(url, cmdList, callback){
