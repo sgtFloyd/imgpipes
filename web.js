@@ -4,44 +4,44 @@ var express = require('express'),
     _ = require('underscore');
 
 var COMMANDS = {
-      blur:       {fn:'convert', args:['-blur', '0x3']},
-      contrast:   {fn:'convert', args:['-contrast']},
-      explode:    {fn:'convert', args:['-implode', '-0.5']},
-      implode:    {fn:'convert', args:['-implode', '0.33']},
-      flip:       {fn:'convert', args:['-flip']},
-      flop:       {fn:'convert', args:['-flop']},
-      gray:       {fn:'convert', args:['-colorspace', 'Gray']},
-      negate:     {fn:'convert', args:['-negate']},
-      paint:      {fn:'convert', args:['-paint', '3']},
-      polaroid:   {fn:'convert', args:['-polaroid', '3', '-background', 'None', '-format', 'png']},
-      posterize:  {fn:'convert', args:['-posterize', '5']},
-      sepia:      {fn:'convert', args:['-sepia-tone', '75%']},
-      sharpen:    {fn:'convert', args:['-sharpen', '5']},
-      swirl:      {fn:'convert', args:['-swirl', '90']},
-      vignette:   {fn:'convert', args:['-vignette', '0x50']}
+      blur:       {fn:'convert', rgs:['-blur', '0x3']},
+      contrast:   {fn:'convert', rgs:['-contrast']},
+      explode:    {fn:'convert', rgs:['-implode', '-0.5']},
+      implode:    {fn:'convert', rgs:['-implode', '0.33']},
+      flip:       {fn:'convert', rgs:['-flip']},
+      flop:       {fn:'convert', rgs:['-flop']},
+      gray:       {fn:'convert', rgs:['-colorspace', 'Gray']},
+      negate:     {fn:'convert', rgs:['-negate']},
+      paint:      {fn:'convert', rgs:['-paint', '3']},
+      polaroid:   {fn:'convert', rgs:['-polaroid', '3', '-background', 'None', '-format', 'png']},
+      posterize:  {fn:'convert', rgs:['-posterize', '5']},
+      sepia:      {fn:'convert', rgs:['-sepia-tone', '75%']},
+      sharpen:    {fn:'convert', rgs:['-sharpen', '5']},
+      swirl:      {fn:'convert', rgs:['-swirl', '90']},
+      vignette:   {fn:'convert', rgs:['-vignette', '0x50']}
     };
 COMMANDS.greyscale = COMMANDS.grayscale = COMMANDS.grey = COMMANDS.gray;
 COMMANDS.mirror = COMMANDS.flop;
 COMMANDS.negative = COMMANDS.invert = COMMANDS.negate;
 
-var buildCommands = function(actions){
-  if( !actions ) return [];
+var buildCommands = function(doList){
+  if( !doList ) return [];
 
-  return _.chain(actions.split(','))
+  return _.chain(doList.split(','))
           .map(function(action){
             var cmd = COMMANDS[action];
-            return {fn:cmd.fn, args:['-'].concat(cmd.args, ['-'])};
+            return {fn:cmd.fn, rgs:['-'].concat(cmd.rgs, ['-'])};
           }).compact().value();
 };
 
-var convert = function(url, actions, callback){
+var convert = function(url, doList, callback){
   if( !url ) return callback();
 
-  var commands = buildCommands(actions),
+  var commands = buildCommands(doList),
       imagepipe = request.get(url);
 
   _.each(commands, function(cmd){
-    var convert = spawn(cmd.fn, cmd.args);
+    var convert = spawn(cmd.fn, cmd.rgs);
     imagepipe.pipe(convert.stdin);
     imagepipe = convert.stdout;
   });
@@ -51,9 +51,9 @@ var convert = function(url, actions, callback){
 var app = express.createServer(express.logger());
 app.get('/', function(req, res, next){
   var url = req.query['url'] || req.query['u'],
-      actions = req.query['do'];
+      doList = req.query['do'];
 
-  convert(url, actions,
+  convert(url, doList,
     function(output){
       if( output )
         output.pipe(res);
