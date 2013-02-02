@@ -4,21 +4,21 @@ var express = require('express'),
     _ = require('underscore');
 
 var COMMANDS = {
-      blur:       ['convert', ['-blur', '0x3']],
-      contrast:   ['convert', ['-contrast']],
-      explode:    ['convert', ['-implode', '-0.5']],
-      implode:    ['convert', ['-implode', '0.33']],
-      flip:       ['convert', ['-flip']],
-      flop:       ['convert', ['-flop']],
-      gray:       ['convert', ['-colorspace', 'Gray']],
-      negate:     ['convert', ['-negate']],
-      paint:      ['convert', ['-paint', '3']],
-      polaroid:   ['convert', ['-polaroid', '3', '-background', 'None', '-format', 'png']],
-      posterize:  ['convert', ['-posterize', '5']],
-      sepia:      ['convert', ['-sepia-tone', '75%']],
-      sharpen:    ['convert', ['-sharpen', '5']],
-      swirl:      ['convert', ['-swirl', '90']],
-      vignette:   ['convert', ['-vignette', '0x50']]
+      blur:       {fn:'convert', args:['-blur', '0x3']},
+      contrast:   {fn:'convert', args:['-contrast']},
+      explode:    {fn:'convert', args:['-implode', '-0.5']},
+      implode:    {fn:'convert', args:['-implode', '0.33']},
+      flip:       {fn:'convert', args:['-flip']},
+      flop:       {fn:'convert', args:['-flop']},
+      gray:       {fn:'convert', args:['-colorspace', 'Gray']},
+      negate:     {fn:'convert', args:['-negate']},
+      paint:      {fn:'convert', args:['-paint', '3']},
+      polaroid:   {fn:'convert', args:['-polaroid', '3', '-background', 'None', '-format', 'png']},
+      posterize:  {fn:'convert', args:['-posterize', '5']},
+      sepia:      {fn:'convert', args:['-sepia-tone', '75%']},
+      sharpen:    {fn:'convert', args:['-sharpen', '5']},
+      swirl:      {fn:'convert', args:['-swirl', '90']},
+      vignette:   {fn:'convert', args:['-vignette', '0x50']}
     };
 COMMANDS.greyscale = COMMANDS.grayscale = COMMANDS.grey = COMMANDS.gray;
 COMMANDS.mirror = COMMANDS.flop;
@@ -29,17 +29,9 @@ var buildCommands = function(actions){
 
   return _.chain(actions.split(','))
           .map(function(action){
-            var fn = COMMANDS[action][0],
-                args = COMMANDS[action][1];
-            return [fn, ['-'].concat(args, ['-'])];
+            var cmd = COMMANDS[action];
+            return {fn:cmd.fn, args:['-'].concat(cmd.args, ['-'])};
           }).compact().value();
-};
-
-var converter = function(action){
-  var command = action[0],
-      args = action[1];
-
-  return spawn(command, args);
 };
 
 var convert = function(url, actions, callback){
@@ -48,8 +40,8 @@ var convert = function(url, actions, callback){
   var commands = buildCommands(actions),
       imagepipe = request.get(url);
 
-  _.each(commands, function(command){
-    var convert = converter(command);
+  _.each(commands, function(cmd){
+    var convert = spawn(cmd.fn, cmd.args);
     imagepipe.pipe(convert.stdin);
     imagepipe = convert.stdout;
   });
