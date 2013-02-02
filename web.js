@@ -28,22 +28,22 @@ var construct = function(cmdList){
   if( !cmdList ) return [];
   var wrap = function(cmds){ return ['-'].concat(cmds, ['-']) };
 
-  var commands = [], currentFn, currentRgs = [];
+  var retVal = [];
   _.each(cmdList.split(','), function(cmd){
     if( cmd in COMMANDS ) {
       cmd = COMMANDS[cmd];
-      if( !currentFn ) currentFn = cmd.fn;
-      if (currentFn === cmd.fn) {
-        currentRgs = currentRgs.concat(cmd.rgs);
+      var lastCmd = retVal[retVal.length-1];
+      if (lastCmd && lastCmd.fn == cmd.fn) {
+        lastCmd.rgs = lastCmd.rgs.concat(cmd.rgs);
       } else {
-        commands = commands.concat({ fn:currentFn, rgs:wrap(currentRgs) })
-        currentFn = cmd.fn;
-        currentRgs = cmd.rgs;
+        retVal = retVal.concat( _.clone(cmd) );
       }
     }
   });
-  commands = commands.concat({ fn:currentFn, rgs:wrap(currentRgs) })
-  return commands;
+  return _.map(retVal, function(cmd){
+    cmd.rgs = wrap(cmd.rgs);
+    return cmd;
+  });
 };
 
 var convert = function(url, cmdList, callback){
