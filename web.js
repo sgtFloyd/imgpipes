@@ -13,7 +13,7 @@ var FX = {
       gray:       {fn:'convert', rgs:['-colorspace', 'Gray']},
       negate:     {fn:'convert', rgs:['-negate']},
       paint:      {fn:'convert', rgs:['-paint', '3']},
-      polaroid:   {fn:'convert', rgs:['-polaroid', '3', '-background', 'None', '-format', 'png']},
+      polaroid:   {fn:'convert', rgs:['-polaroid', '3', '-background', 'White']},
       posterize:  {fn:'convert', rgs:['-posterize', '5']},
       sepia:      {fn:'convert', rgs:['-sepia-tone', '75%']},
       sharpen:    {fn:'convert', rgs:['-sharpen', '5']},
