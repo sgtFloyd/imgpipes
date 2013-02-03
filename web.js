@@ -43,8 +43,9 @@ var convert = function(url, effects, callback){
 
 var construct = function(effects){
   if( !effects ) return [];
-  return _.chain( optimizeEffects(effects) )
+  return _.chain( effects.split(',') )
     .reduce(function(output, effect){
+      if( !(effect in FX) ) return output;
       var lastCmd = _.last(output),
           thisCmd = FX[effect];
 
@@ -65,36 +66,19 @@ var construct = function(effects){
     }).value();
 };
 
-var optimizeEffects = function(effects){
-  // Reject any invalid effects
-  effects = _.filter(effects.split(','),
-    function(effect){ return effect in FX; }
-  ).join(',');
-
-  // Remove or combine any redundant combinations.
-  // This can probably be done more efficently.
-  var tempEffects;
-  while( tempEffects !== effects ) {
-    tempEffects = effects;
-    effects = effects.replace(/flip,flip,?/g,'');
-    effects = effects.replace(/flop,flop,?/g,'');
-    effects = effects.replace(/gr[ea]y,gr[ea]y,?/g, 'grey,');
-    effects = effects.replace(/(negate|invert|negative),(negate|invert|negative),?/g,'');
-  }
-  return _.compact(effects.split(','));
-};
-
 var app = express.createServer(express.logger());
 app.get('/', function(req, res, next){
   var url = req.query['url'] || req.query['u'],
       effects = req.query['do'];
 
-  convert(url, effects,
-    function(output){
-      if( output )
-        output.pipe(res);
-      else next();
-  });
+  try {
+    convert(url, effects,
+      function(output){
+        if( output )
+          output.pipe(res);
+        else next();
+    });
+  } catch(err){ res.send(500); }
 });
 app.get('/ping', function(req, res) { res.send("PONG"); });
 app.get('*', function(req, res){ res.send(404); });
