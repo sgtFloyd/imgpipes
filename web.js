@@ -13,7 +13,7 @@ var FX = {
       gray:       {fn:'convert', rgs:['-colorspace', 'Gray']},
       negate:     {fn:'convert', rgs:['-negate']},
       paint:      {fn:'convert', rgs:['-paint', '3']},
-      polaroid:   {fn:'convert', rgs:['-polaroid', '3', '-background', 'White']},
+      polaroid:   {fn:'convert', rgs:['-polaroid', '3', '-background', 'white']},
       posterize:  {fn:'convert', rgs:['-posterize', '5']},
       sepia:      {fn:'convert', rgs:['-sepia-tone', '75%']},
       sharpen:    {fn:'convert', rgs:['-sharpen', '5']},
@@ -53,7 +53,7 @@ var construct = function(effectList){
 
       // If this effect uses the same function as the previous,
       // append its arguments to the previous command's arguments.
-      if( lastCmd && lastCmd.fn == thisCmd.fn )
+      if( lastCmd && lastCmd.fn === thisCmd.fn )
         lastCmd.rgs = lastCmd.rgs.concat(thisCmd.rgs);
       // Otherwise add it to the output as a new command.
       else output = output.concat(_.clone(thisCmd));
