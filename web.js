@@ -24,11 +24,11 @@ FX.greyscale = FX.grayscale = FX.grey = FX.gray;
 FX.mirror = FX.flop;
 FX.negative = FX.invert = FX.negate;
 
-var convert = function(url, effectList, callback){
+var convert = function(url, effects, callback){
   if( !url ) return callback();
 
   var imagepipe = request.get(url),
-      commands = construct(effectList);
+      commands = construct(effects);
 
   // Spawn an ImageMagick process for each command, piping
   // the previous command's output into the next one's input.
@@ -41,13 +41,10 @@ var convert = function(url, effectList, callback){
   callback(imagepipe);
 };
 
-var construct = function(effectList){
-  if( !effectList ) return [];
-  return _.chain(effectList.split(','))
+var construct = function(effects){
+  if( !effects ) return [];
+  return _.chain( optimizeEffects(effects) )
     .reduce(function(output, effect){
-      // Skip any invalid effects.
-      if( !(effect in FX) ) return output;
-
       var lastCmd = _.last(output),
           thisCmd = FX[effect];
 
@@ -55,6 +52,7 @@ var construct = function(effectList){
       // append its arguments to the previous command's arguments.
       if( lastCmd && lastCmd.fn === thisCmd.fn )
         lastCmd.rgs = lastCmd.rgs.concat(thisCmd.rgs);
+
       // Otherwise add it to the output as a new command.
       else output = output.concat(_.clone(thisCmd));
       return output;
@@ -67,12 +65,31 @@ var construct = function(effectList){
     }).value();
 };
 
+var optimizeEffects = function(effects){
+  // Reject any invalid effects
+  effects = _.filter(effects.split(','),
+    function(effect){ return effect in FX; }
+  ).join(',');
+
+  // Remove or combine any redundant combinations.
+  // This can probably be done more efficently.
+  var tempEffects;
+  while( tempEffects !== effects ) {
+    tempEffects = effects;
+    effects = effects.replace(/flip,flip,?/g,'');
+    effects = effects.replace(/flop,flop,?/g,'');
+    effects = effects.replace(/gr[ea]y,gr[ea]y,?/g, 'grey,');
+    effects = effects.replace(/(negate|invert|negative),(negate|invert|negative),?/g,'');
+  }
+  return _.compact(effects.split(','));
+};
+
 var app = express.createServer(express.logger());
 app.get('/', function(req, res, next){
   var url = req.query['url'] || req.query['u'],
-      effectList = req.query['do'];
+      effects = req.query['do'];
 
-  convert(url, effectList,
+  convert(url, effects,
     function(output){
       if( output )
         output.pipe(res);
