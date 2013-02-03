@@ -13,7 +13,8 @@ var FX = {
       gray:       {fn:'convert', rgs:['-colorspace', 'Gray']},
       negate:     {fn:'convert', rgs:['-negate']},
       paint:      {fn:'convert', rgs:['-paint', '3']},
-      polaroid:   {fn:'convert', rgs:['-polaroid', '3', '-background', 'white']},
+      pixel:      {fn:'convert', rgs:['-scale', '10%', '-scale', '1000%']},
+      polaroid:   {fn:'convert', rgs:['+polaroid', '-background', 'white', '-flatten']},
       posterize:  {fn:'convert', rgs:['-posterize', '5']},
       sepia:      {fn:'convert', rgs:['-sepia-tone', '75%']},
       sharpen:    {fn:'convert', rgs:['-sharpen', '5']},
@@ -22,6 +23,7 @@ var FX = {
     };
 FX.greyscale = FX.grayscale = FX.grey = FX.gray;
 FX.mirror = FX.flop;
+FX.pixelate = FX.pixelart = FX.pixel;
 FX.negative = FX.invert = FX.negate;
 
 var convert = function(url, effects, callback){
