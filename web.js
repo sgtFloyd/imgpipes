@@ -71,10 +71,12 @@ var construct = function(effects){
 var app = express.createServer(express.logger());
 app.get('/', function(req, res, next){
   var url = req.query['url'] || req.query['u'],
-      effects = req.query['do'];
+      fx = req.query['do'] || req.query['fx'];
+  if(url instanceof Array) url = url[0];
+  if(fx instanceof Array) fx = fx[0];
 
   try {
-    convert(url, effects,
+    convert(url, fx,
       function(output){
         if( output )
           output.pipe(res);
