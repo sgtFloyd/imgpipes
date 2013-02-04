@@ -1,7 +1,8 @@
 var express = require('express'),
     request = require('request'),
     spawn = require('child_process').spawn,
-    _ = require('underscore');
+    _ = require('underscore'),
+    repoUrl = 'https://github.com/sgtFloyd/imgpipes';
 
 var FX = {
       blur:       {fn:'convert', rgs:['-blur', '0x3']},
@@ -80,7 +81,7 @@ app.get('/', function(req, res, next){
       function(output){
         if( output )
           output.pipe(res);
-        else next();
+        else res.redirect(repoUrl);
     });
   } catch(e) {
     res.send(500);
