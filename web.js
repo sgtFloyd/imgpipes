@@ -1,7 +1,6 @@
 var express = require('express'),
     request = require('request'),
     spawn = require('child_process').spawn,
-    _ = require('underscore'),
     repoUrl = 'https://github.com/sgtFloyd/imgpipes';
 
 var FX = {
@@ -28,15 +27,13 @@ FX.pixelate = FX.pixelart = FX.pixel;
 FX.negative = FX.invert = FX.negate;
 
 var convert = function(url, effects, callback){
-  if( !url ) return callback();
-
+  if(typeof url !== 'string') return callback();
   var imagepipe = request.get(url),
       commands = construct(effects);
 
   // Spawn an ImageMagick process for each command, piping
   // the previous command's output into the next one's input.
-  _.each(commands, function(cmd){
-    console.log('Spawning:', cmd.fn, cmd.rgs.join(' '));
+  commands.forEach(function(cmd){
     var process = spawn(cmd.fn, cmd.rgs);
     imagepipe.pipe(process.stdin);
     imagepipe = process.stdout;
@@ -44,29 +41,33 @@ var convert = function(url, effects, callback){
   callback(imagepipe);
 };
 
+// Construct a list of commands given a comma-separated list of
+// effects. If an effect uses the same command as the previous
+// one, combine them into a single command.
 var construct = function(effects){
-  if( !effects ) return [];
-  return _.chain( effects.split(',') )
-    .reduce(function(output, effect){
-      if( !(effect in FX) ) return output;
-      var lastCmd = _.last(output),
-          thisCmd = FX[effect];
+  if(typeof effects !== 'string') return [];
 
-      // If this effect uses the same function as the previous,
-      // append its arguments to the previous command's arguments.
-      if( lastCmd && lastCmd.fn === thisCmd.fn )
-        lastCmd.rgs = lastCmd.rgs.concat(thisCmd.rgs);
+  var commands = [];
+  effects.split(',').forEach(function(effect){
+    if( !(effect in FX) ) return;
+    var lastCmd = commands[commands.length-1],
+        thisCmd = FX[effect];
 
-      // Otherwise add it to the output as a new command.
-      else output = output.concat(_.clone(thisCmd));
-      return output;
-    }, [])
-    .map(function(cmd){
-      // Add '-' as each command's first and last arguments,
-      // telling ImageMagick to pipe from stdin to stdout.
-      cmd.rgs = _.flatten(['-', cmd.rgs, '-']);
-      return cmd;
-    }).value();
+    // If this effect uses the same function as the previous,
+    // append its arguments to the previous command's arguments.
+    if( lastCmd && lastCmd.fn === thisCmd.fn )
+      lastCmd.rgs = lastCmd.rgs.concat(thisCmd.rgs);
+
+    // Otherwise add it to the output as a new command.
+    else commands = commands.concat({fn:thisCmd.fn, rgs:thisCmd.rgs});
+  });
+
+  // Add '-' as each command's first and last arguments,
+  // telling ImageMagick to pipe from stdin to stdout.
+  commands.forEach(function(cmd){
+    cmd.rgs = ['-'].concat(cmd.rgs, ['-']);
+  });
+  return commands;
 };
 
 var app = express.createServer(express.logger());
