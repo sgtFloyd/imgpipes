@@ -80,7 +80,10 @@ app.get('/', function(req, res, next){
           output.pipe(res);
         else next();
     });
-  } catch(err){ res.send(500); }
+  } catch(e) {
+    res.send(500);
+    console.error(e.stack);
+  }
 });
 app.get('/ping', function(req, res) { res.send("PONG"); });
 app.get('*', function(req, res){ res.send(404); });
