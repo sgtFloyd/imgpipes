@@ -26,15 +26,30 @@ FX.mirror = FX.flop;
 FX.pixelate = FX.pixelart = FX.pixel;
 FX.negative = FX.invert = FX.negate;
 
+var inspect = function(pipe, name){
+  console.log("registered pipe:", name);
+  pipe.on('data', function(data){
+    console.log(name, 'sending', data.length, 'bytes');
+  });
+  pipe.on('drain', function(){
+    console.log(name, 'received data');
+  });
+};
+
 var convert = function(url, effects, callback){
   if(typeof url !== 'string') return callback();
   var imagepipe = request.get(url),
       commands = construct(effects);
+  inspect(imagepipe, "request.get('"+url+"')");
 
   // Spawn an ImageMagick process for each command, piping
   // the previous command's output into the next one's input.
   commands.forEach(function(cmd){
     var process = spawn(cmd.fn, cmd.rgs);
+
+    inspect(process.stdin,  "stdin: ("+cmd.fn+" "+cmd.rgs.join(' ')+")");
+    inspect(process.stdout, "stdout: ("+cmd.fn+" "+cmd.rgs.join(' ')+")");
+
     imagepipe.pipe(process.stdin);
     imagepipe = process.stdout;
   });
@@ -55,7 +70,7 @@ var construct = function(effects){
 
     // If this effect uses the same function as the previous,
     // append its arguments to the previous command's arguments.
-    if( lastCmd && lastCmd.fn === thisCmd.fn )
+    if( false && lastCmd && lastCmd.fn === thisCmd.fn )
       lastCmd.rgs = lastCmd.rgs.concat(thisCmd.rgs);
 
     // Otherwise add it to the output as a new command.
@@ -80,9 +95,10 @@ app.get('/', function(req, res, next){
   try {
     convert(url, fx,
       function(output){
-        if( output )
+        if( output ) {
+          inspect(res, "http response");
           output.pipe(res);
-        else res.redirect(repoUrl);
+        } else res.redirect(repoUrl);
     });
   } catch(e) {
     res.send(500);
