@@ -6,7 +6,7 @@ var express = require('express'),
 var FX = {
       blur:       {fn:'convert', rgs:['-blur', '0x3']},
       contrast:   {fn:'convert', rgs:['-contrast']},
-      eccehomo:   {fn:'convert', rgs:['-swirl', '75', '-posterize', '15', '-paint', '10']},
+      eccehomo:   {fn:'convert', rgs:['-swirl', '75', '-posterize', '15', '-paint', '5']},
       explode:    {fn:'convert', rgs:['-implode', '-0.5']},
       implode:    {fn:'convert', rgs:['-implode', '0.33']},
       flip:       {fn:'convert', rgs:['-flip']},
