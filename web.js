@@ -26,6 +26,7 @@ FX.greyscale = FX.grayscale = FX.grey = FX.gray;
 FX.mirror = FX.flop;
 FX.pixelate = FX.pixelart = FX.pixel;
 FX.negative = FX.invert = FX.negate;
+FX.restore = FX.eccehomo;
 
 var convert = function(url, effects, callback){
   if(typeof url !== 'string') return callback();
