@@ -11,7 +11,7 @@ Installation:
 
 Examples:
 ------
-See [web.js](https://github.com/sgtFloyd/imgpipes/blob/master/web.js) for a list of all available effects.
+See [web.js](https://github.com/sgtFloyd/imgpipes/blob/master/web.js#L6-L29) for a list of all available effects.
 
 Original: `/?url=https://raw.github.com/sgtFloyd/imgpipes/master/examples/lena.png`  
 ![](https://raw.github.com/sgtFloyd/imgpipes/master/examples/lena.png)
